@@ -142,7 +142,7 @@ static const LEX_STRING maturity_name[]={
   { C_STRING_WITH_LEN("Stable") }};
 
 
-static my_bool show_plugins(THD *thd, plugin_ref plugin,
+static my_bool show_plugins(THD *thd, st_plugin_int *plugin,
                             void *arg)
 {
   TABLE *table= (TABLE*) arg;
@@ -3757,7 +3757,7 @@ struct st_add_schema_table
 };
 
 
-static my_bool add_schema_table(THD *thd, plugin_ref plugin,
+static my_bool add_schema_table(THD *thd, st_plugin_int *plugin,
                                 void* p_data)
 {
   LEX_STRING *file_name= 0;
@@ -5327,7 +5327,7 @@ int fill_schema_charsets(THD *thd, TABLE_LIST *tables, COND *cond)
 }
 
 
-static my_bool iter_schema_engines(THD *thd, plugin_ref plugin,
+static my_bool iter_schema_engines(THD *thd, st_plugin_int *plugin,
                                    void *ptable)
 {
   TABLE *table= (TABLE *) ptable;
@@ -7220,7 +7220,7 @@ struct schema_table_ref
     0	table not found
     1   found the schema table
 */
-static my_bool find_schema_table_in_plugin(THD *thd, plugin_ref plugin,
+static my_bool find_schema_table_in_plugin(THD *thd, st_plugin_int *plugin,
                                            void* p_table)
 {
   schema_table_ref *p_schema_table= (schema_table_ref *)p_table;
@@ -8026,7 +8026,7 @@ struct run_hton_fill_schema_table_args
   COND *cond;
 };
 
-static my_bool run_hton_fill_schema_table(THD *thd, plugin_ref plugin,
+static my_bool run_hton_fill_schema_table(THD *thd, st_plugin_int *plugin,
                                           void *arg)
 {
   struct run_hton_fill_schema_table_args *args=
