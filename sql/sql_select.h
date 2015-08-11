@@ -558,7 +558,7 @@ typedef struct st_join_table {
             !(used_sjm_lookup_tables & ~emb_sj_nest->sj_inner_tables));
   }
 
-  void remove_redundant_bnl_scan_conds();
+  void remove_redundant_bnl_scan_conds(THD *thd);
 
   void save_explain_data(Explain_table_access *eta, table_map prefix_tables, 
                          bool distinct, struct st_join_table *first_top_tab);
@@ -1850,9 +1850,9 @@ int test_if_item_cache_changed(List<Cached_item> &list);
 int join_init_read_record(JOIN_TAB *tab);
 int join_read_record_no_init(JOIN_TAB *tab);
 void set_position(JOIN *join,uint idx,JOIN_TAB *table,KEYUSE *key);
-inline Item * and_items(Item* cond, Item *item)
+inline Item * and_items(THD *thd, Item* cond, Item *item)
 {
-  return (cond? (new Item_cond_and(cond, item)) : item);
+  return (cond ? (new Item_cond_and(thd, cond, item)) : item);
 }
 bool choose_plan(JOIN *join, table_map join_tables);
 void optimize_wo_join_buffering(JOIN *join, uint first_tab, uint last_tab, 
@@ -1893,7 +1893,7 @@ void push_index_cond(JOIN_TAB *tab, uint keyno);
 #define OPT_LINK_EQUAL_FIELDS    1
 
 /* EXPLAIN-related utility functions */
-int print_explain_message_line(select_result_sink *result, 
+int print_explain_message_line(THD *thd, select_result_sink *result,
                                uint8 options, bool is_analyze,
                                uint select_number,
                                const char *select_type,

@@ -131,12 +131,14 @@ public:
     children.append(select_no);
   }
 
-  virtual int print_explain(Explain_query *query, select_result_sink *output, 
+  virtual int print_explain(THD *thd, Explain_query *query,
+                            select_result_sink *output,
                             uint8 explain_flags, bool is_analyze)=0;
   virtual void print_explain_json(Explain_query *query, Json_writer *writer, 
                                   bool is_analyze)= 0;
 
-  int print_explain_for_children(Explain_query *query, select_result_sink *output, 
+  int print_explain_for_children(THD *thd, Explain_query *query,
+                                 select_result_sink *output,
                                  uint8 explain_flags, bool is_analyze);
   void print_explain_json_for_children(Explain_query *query,
                                        Json_writer *writer, bool is_analyze);
@@ -170,7 +172,7 @@ public:
 
   int select_id;
 
-  int print_explain(Explain_query *query, select_result_sink *output,
+  int print_explain(THD *thd, Explain_query *query, select_result_sink *output,
                     uint8 explain_flags, bool is_analyze);
   void print_explain_json(Explain_query *query, Json_writer *writer, 
                           bool is_analyze);
@@ -240,7 +242,7 @@ public:
 
   Sort_and_group_tracker  ops_tracker;
   
-  int print_explain(Explain_query *query, select_result_sink *output, 
+  int print_explain(THD *thd, Explain_query *query, select_result_sink *output,
                     uint8 explain_flags, bool is_analyze);
   void print_explain_json(Explain_query *query, Json_writer *writer, 
                           bool is_analyze);
@@ -292,7 +294,7 @@ public:
   {
     union_members.append(select_no);
   }
-  int print_explain(Explain_query *query, select_result_sink *output, 
+  int print_explain(THD *thd, Explain_query *query, select_result_sink *output,
                     uint8 explain_flags, bool is_analyze);
   void print_explain_json(Explain_query *query, Json_writer *writer, 
                           bool is_analyze);
@@ -385,7 +387,7 @@ public:
   Explain_union *get_union(uint select_id);
  
   /* Produce a tabular EXPLAIN output */
-  int print_explain(select_result_sink *output, uint8 explain_flags, 
+  int print_explain(THD *thd, select_result_sink *output, uint8 explain_flags,
                     bool is_analyze);
   
   /* Send tabular EXPLAIN to the client */
@@ -706,7 +708,7 @@ public:
   Exec_time_tracker op_tracker;
   Table_access_tracker jbuf_tracker;
   
-  int print_explain(select_result_sink *output, uint8 explain_flags, 
+  int print_explain(THD *thd, select_result_sink *output, uint8 explain_flags,
                     bool is_analyze,
                     uint select_id, const char *select_type,
                     bool using_temporary, bool using_filesort);
@@ -798,7 +800,8 @@ public:
   /* TODO: This tracks time to read rows from the table */
   Exec_time_tracker table_tracker;
 
-  virtual int print_explain(Explain_query *query, select_result_sink *output, 
+  virtual int print_explain(THD *thd, Explain_query *query,
+                            select_result_sink *output,
                             uint8 explain_flags, bool is_analyze);
   virtual void print_explain_json(Explain_query *query, Json_writer *writer,
                                   bool is_analyze);
@@ -824,7 +827,7 @@ public:
   enum explain_node_type get_type() { return EXPLAIN_INSERT; }
   int get_select_id() { return 1; /* always root */ }
 
-  int print_explain(Explain_query *query, select_result_sink *output, 
+  int print_explain(THD *thd, Explain_query *query, select_result_sink *output,
                     uint8 explain_flags, bool is_analyze);
   void print_explain_json(Explain_query *query, Json_writer *writer, 
                           bool is_analyze);
@@ -851,7 +854,8 @@ public:
   virtual enum explain_node_type get_type() { return EXPLAIN_DELETE; }
   virtual int get_select_id() { return 1; /* always root */ }
 
-  virtual int print_explain(Explain_query *query, select_result_sink *output, 
+  virtual int print_explain(THD *thd, Explain_query *query,
+                            select_result_sink *output,
                             uint8 explain_flags, bool is_analyze);
   virtual void print_explain_json(Explain_query *query, Json_writer *writer,
                                   bool is_analyze);

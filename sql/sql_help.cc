@@ -447,13 +447,14 @@ void get_all_items_for_category(THD *thd, TABLE *items, Field *pfname,
     0		Successeful send
 */
 
-int send_answer_1(Protocol *protocol, String *s1, String *s2, String *s3)
+static int send_answer_1(THD *thd, Protocol *protocol, String *s1, String *s2,
+                         String *s3)
 {
   DBUG_ENTER("send_answer_1");
   List<Item> field_list;
-  field_list.push_back(new Item_empty_string("name",64));
-  field_list.push_back(new Item_empty_string("description",1000));
-  field_list.push_back(new Item_empty_string("example",1000));
+  field_list.push_back(new Item_empty_string(thd, "name", 64));
+  field_list.push_back(new Item_empty_string(thd, "description", 1000));
+  field_list.push_back(new Item_empty_string(thd, "example", 1000));
 
   if (protocol->send_result_set_metadata(&field_list,
                             Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF))
@@ -490,14 +491,15 @@ int send_answer_1(Protocol *protocol, String *s1, String *s2, String *s3)
     result of protocol->send_result_set_metadata
 */
 
-int send_header_2(Protocol *protocol, bool for_category)
+static int send_header_2(THD *thd, Protocol *protocol, bool for_category)
 {
   DBUG_ENTER("send_header_2");
   List<Item> field_list;
   if (for_category)
-    field_list.push_back(new Item_empty_string("source_category_name",64));
-  field_list.push_back(new Item_empty_string("name",64));
-  field_list.push_back(new Item_empty_string("is_it_category",1));
+    field_list.push_back(new Item_empty_string(thd, "source_category_name",
+                                               64));
+  field_list.push_back(new Item_empty_string(thd, "name", 64));
+  field_list.push_back(new Item_empty_string(thd, "is_it_category", 1));
   DBUG_RETURN(protocol->send_result_set_metadata(&field_list, Protocol::SEND_NUM_ROWS |
                                                  Protocol::SEND_EOF));
 }
@@ -625,9 +627,10 @@ SQL_SELECT *prepare_select_for_name(THD *thd, const char *mask, uint mlen,
 				    TABLE_LIST *tables, TABLE *table,
 				    Field *pfname, int *error)
 {
-  Item *cond= new Item_func_like(new Item_field(pfname),
-				 new Item_string(mask,mlen,pfname->charset()),
-				 new Item_string_ascii("\\"),
+  Item *cond= new Item_func_like(thd, new Item_field(thd, pfname),
+                                 new Item_string(thd, mask, mlen,
+                                                 pfname->charset()),
+                                 new Item_string_ascii(thd, "\\"),
                                  FALSE);
   if (thd->is_fatal_error)
     return 0;					// OOM
@@ -750,12 +753,12 @@ bool mysqld_help(THD *thd, const char *mask)
     delete select;
     if (!count_categories)
     {
-      if (send_header_2(protocol,FALSE))
+      if (send_header_2(thd, protocol, FALSE))
 	goto error;
     }
     else if (count_categories > 1)
     {
-      if (send_header_2(protocol,FALSE) ||
+      if (send_header_2(thd, protocol, FALSE) ||
 	  send_variant_2_list(mem_root,protocol,&categories_list,"Y",0))
 	goto error;
     }
@@ -763,11 +766,11 @@ bool mysqld_help(THD *thd, const char *mask)
     {
       Field *topic_cat_id= used_fields[help_topic_help_category_id].field;
       Item *cond_topic_by_cat=
-	new Item_func_equal(new Item_field(topic_cat_id),
-			    new Item_int((int32)category_id));
+        new Item_func_equal(thd, new Item_field(thd, topic_cat_id),
+                            new Item_int(thd, (int32) category_id));
       Item *cond_cat_by_cat=
-	new Item_func_equal(new Item_field(cat_cat_id),
-			    new Item_int((int32)category_id));
+        new Item_func_equal(thd, new Item_field(thd, cat_cat_id),
+                            new Item_int(thd, (int32) category_id));
       if (!(select= prepare_simple_select(thd, cond_topic_by_cat,
                                           tables[0].table, &error)))
         goto error;
@@ -783,7 +786,7 @@ bool mysqld_help(THD *thd, const char *mask)
 				 select,&subcategories_list);
       delete select;
       String *cat= categories_list.head();
-      if (send_header_2(protocol, TRUE) ||
+      if (send_header_2(thd, protocol, TRUE) ||
 	  send_variant_2_list(mem_root,protocol,&topics_list,       "N",cat) ||
 	  send_variant_2_list(mem_root,protocol,&subcategories_list,"Y",cat))
 	goto error;
@@ -791,13 +794,13 @@ bool mysqld_help(THD *thd, const char *mask)
   }
   else if (count_topics == 1)
   {
-    if (send_answer_1(protocol,&name,&description,&example))
+    if (send_answer_1(thd, protocol, &name, &description, &example))
       goto error;
   }
   else
   {
     /* First send header and functions */
-    if (send_header_2(protocol, FALSE) ||
+    if (send_header_2(thd, protocol, FALSE) ||
 	send_variant_2_list(mem_root,protocol, &topics_list, "N", 0))
       goto error;
     if (!(select=

@@ -4273,7 +4273,7 @@ int LEX::print_explain(select_result_sink *output, uint8 explain_flags,
   int res;
   if (explain && explain->have_query_plan())
   {
-    res= explain->print_explain(output, explain_flags, is_analyze);
+    res= explain->print_explain(thd, output, explain_flags, is_analyze);
     *printed_anything= true;
   }
   else
